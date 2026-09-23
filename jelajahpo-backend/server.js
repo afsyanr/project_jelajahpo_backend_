@@ -70,6 +70,20 @@ app.get('/kategori', (req, res) => {
     });
 });
 
+app.get('/wisata/:id_wisata', (req, res) => {
+    const { id_wisata } = req.params;
+    const sql = 'SELECT *FROM wisata WHERE id_wisata = ?';
+    db.query(sql, [id_wisata], (err, result) => {
+        if (err) {
+            return req.status(500).json({ error: err });
+        }
+        if (result.length === 0) {
+            return res.status(404).json({ message: 'Wisata tidak ditemukan' });
+        }
+        res.json(result[0]);
+    });
+});
+
 app.put('/wisata/:id_wisata', (req, res) => {
     const { id_wisata } = req.params;
     const { nama_wisata, deskripsi, harga_tiket, id_kategori } = req.body;
