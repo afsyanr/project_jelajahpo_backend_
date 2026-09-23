@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const mysql = require('mysql2');
+const bcrypt = require('bcrypt')
+const saltRounds = 10;
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
@@ -96,6 +98,26 @@ app.delete('/wisata/:id_wisata', (req, res) => {
         }
         res.json({ message: 'Wisata berhasil dihapus!' });
     });
+});
+
+app.post('/pengguna', async (req, res) => {
+    const { nama, email, password, no_hp } = req.body;
+
+    if (!nama || !email || !password) {
+        return res.status(400).json({ message: 'Nama, email, dan password wajib diisi' });
+    }
+    try {
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        const sql = 'INSERT INTO pengguna (nama, email, password, no_hp) VALUES (?, ?, ?, ?)';
+        db.query(sql, [nama, email, hashedPassword, no_hp], (err, result) => {
+            if (err.code === 'ER_DUP_ENTRY') {
+                return res.status(400).json({ message: 'Email sudah terdaftar, gunakan email lain' });
+            }
+            res.json({ message: 'Akun berhasil dibuat!', id_pengguna: result.insertId });
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'gagal mengkripsi password' });
+    }
 });
 app.listen(PORT, () => {
     console.log(`Server JelajahPo jalan di http://localhost:${PORT}`);
